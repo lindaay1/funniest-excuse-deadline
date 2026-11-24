@@ -15,6 +15,7 @@ line, 1-200 characters, valid UTF-8) and the file is read back and
 compared afterwards, so a short or corrupted write fails out loud.
 """
 
+import hashlib
 import os
 import sys
 
@@ -35,6 +36,8 @@ def check_line(line):
         )
     if "\n" in line or "\r" in line:
         raise SystemExit("excuse must be a single line")
+    if line != line.strip():
+        raise SystemExit("excuse has leading or trailing whitespace")
     blob = line.encode("utf-8")
     if blob.endswith(b"\n"):
         raise SystemExit("excuse must not end with a newline")
@@ -52,8 +55,10 @@ def main():
         back = handle.read()
     if back != blob:
         raise SystemExit("entry.txt round-trip mismatch")
+    digest = hashlib.sha256(blob).hexdigest()
     sys.stdout.write(
-        "wrote entry.txt: %d chars, %d bytes\n" % (len(EXCUSE), len(blob))
+        "wrote entry.txt: %d chars, %d bytes, sha256 %s\n"
+        % (len(EXCUSE), len(blob), digest)
     )
     return 0
 
